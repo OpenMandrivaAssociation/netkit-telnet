@@ -6,7 +6,7 @@ License:	BSD
 Group:		Networking/Remote access
 URL:		ftp://ftp.uk.linux.org/pub/linux/Networking/netkit/
 Source0:	ftp://ftp.uk.linux.org/pub/linux/Networking/netkit/netkit-telnet-%{version}.tar.bz2
-Source2:	telnet-client.tar
+Source2:	telnet-client.tar.bz2
 Patch0:		telnet-client-cvs.patch
 Patch1:		telnetd-0.17.diff
 Patch2:		telnet-0.17-env.patch
