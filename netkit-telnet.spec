@@ -1,27 +1,34 @@
 Summary:	Client for the telnet remote login protocol
 Name:		netkit-telnet
 Version:	0.17
-Release:	%mkrel 1
+Release:	%mkrel 2
 License:	BSD
 Group:		Networking/Remote access
 URL:		ftp://ftp.uk.linux.org/pub/linux/Networking/netkit/
-Source0:	ftp://ftp.uk.linux.org/pub/linux/Networking/netkit/netkit-telnet-%{version}.tar.bz2
-Source2:	telnet-client.tar.bz2
-Patch0:		telnet-client-cvs.patch
-Patch1:		telnetd-0.17.diff
-Patch2:		telnet-0.17-env.patch
-Patch3:		telnet-0.17-pek.patch
-Patch4:		telnet-0.17-issue.patch
-Patch5:		telnet-0.17-sa-01-49.patch
-Patch6:		telnet-0.17-8bit.patch
-Patch7:		telnet-0.17-argv.patch
-Patch8:		telnet-0.17-conf.patch
-Patch9:		telnet-0.17-sock.patch
-Patch10:	telnet-0.17-cleanup_race.patch
-Patch11:	telnetd-0.17-pty_read.patch
-Patch12:	telnet-0.17-CAN-2005-468_469.patch
-Patch13:	telnet-0.17-cleanup_cleanup.patch
-Patch14:	telnet-0.17-CAN-2005-0488.patch
+Source0:	ftp://ftp.uk.linux.org/pub/linux/Networking/netkit/netkit-telnet-%{version}.tar.gz
+Source2:	telnet-client.tar.gz
+Patch1:		telnet-client-cvs.patch
+Patch5:		telnetd-0.17.diff
+Patch6:		telnet-0.17-env.patch
+Patch7:		telnet-0.17-issue.patch
+Patch8:		telnet-0.17-sa-01-49.patch
+Patch9:		telnet-0.17-env-5x.patch
+Patch10:	telnet-0.17-pek.patch
+Patch11:	telnet-0.17-8bit.patch
+Patch12:	telnet-0.17-argv.patch
+Patch13:	telnet-0.17-conf.patch
+Patch14:	telnet-0.17-cleanup_race.patch
+Patch15:	telnetd-0.17-pty_read.patch
+Patch16:	telnet-0.17-CAN-2005-468_469.patch
+Patch17:	telnet-0.17-linemode.patch
+Patch18:	telnet-gethostbyname.patch
+Patch19:	netkit-telnet-0.17-ipv6.diff
+Patch20:	netkit-telnet-0.17-nodns.patch
+Patch21:	telnet-0.17-errno_test_sys_bsd.patch
+#
+Patch100:	telnet-0.17-sock.patch
+Patch101:	telnet-0.17-cleanup_cleanup.patch
+Patch102:	telnet-0.17-CAN-2005-0488.patch
 BuildRequires:	gpm-devel
 BuildRequires:	ncurses-devel
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
@@ -47,25 +54,31 @@ you want a secure server.
 %prep 
 
 %setup -q -n netkit-telnet-%{version}
+
 mv telnet telnet-NETKIT
 %setup -T -D -q -a 2 -n netkit-telnet-%{version}
 
-%patch0 -p0 -b .cvs
-%patch1 -p0 -b .fix
-%patch2 -p1 -b .env
-%patch3 -p0 -b .pek
-%patch4 -p1 -b .issue
-%patch5 -p1 -b .sa-01-49
-%patch6 -p1 -b .8bit
-%patch7 -p1 -b .argv
-%patch8 -p1 -b .confverb
-%patch9 -p1 -b .socket
-
-%patch10 -p1 -b .cleanup_race 
-%patch11 -p0 -b .pty_read
-%patch12 -p1 -b .CAN-2005-468_469
-%patch13 -p1 -b .cleanup_cleanup
-%patch14 -p1 -b .CAN-2005-0488
+%patch1 -p0 -b .cvs
+%patch5 -p0 -b .fix
+%patch6 -p1 -b .env
+%patch10 -p0 -b .pek
+%patch7 -p1 -b .issue
+%patch8 -p1 -b .sa-01-49
+%patch11 -p1 -b .8bit
+%patch12 -p1 -b .argv
+%patch13 -p1 -b .confverb
+%patch14 -p1 -b .cleanup_race 
+%patch15 -p0 -b .pty_read
+%patch16 -p1 -b .CAN-2005-468_469
+#%patch17 -p1 -b .linemode
+%patch18 -p1 -b .gethost
+%patch19 -p1 -b .gethost2
+%patch20 -p1 -b .nodns
+%patch21 -p1 -b .errnosysbsd
+#
+%patch100 -p1 -b .socket
+%patch101 -p1 -b .cleanup_cleanup
+%patch102 -p1 -b .CAN-2005-0488
 
 # only build the telnet client
 #perl -pi -e "s|^SUB.*|SUB = telnet|g" Makefile
@@ -116,4 +129,3 @@ install -m0644 telnetd/telnetd.8 %{buildroot}%{_mandir}/man8/netkit-telnetd.8
 %doc ChangeLog README
 %attr(0755,root,root) %{_sbindir}/netkit-telnetd
 %attr(0644,root,root) %{_mandir}/man8/netkit-telnetd.8*
-
