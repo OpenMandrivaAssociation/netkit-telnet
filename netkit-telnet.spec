@@ -31,6 +31,7 @@ Patch101:	telnet-0.17-cleanup_cleanup.patch
 Patch102:	telnet-0.17-CAN-2005-0488.patch
 BuildRequires:	gpm-devel
 BuildRequires:	ncurses-devel
+BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %description
 Telnet is a popular protocol for logging into remote systems over
