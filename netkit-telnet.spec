@@ -1,7 +1,7 @@
 Summary:	Client for the telnet remote login protocol
 Name:		netkit-telnet
 Version:	0.17
-Release:	%mkrel 4
+Release:	%mkrel 5
 License:	BSD
 Group:		Networking/Remote access
 URL:		ftp://ftp.uk.linux.org/pub/linux/Networking/netkit/
@@ -41,6 +41,8 @@ client.
 %package	server
 Summary:	A extremely unsecure telnet server
 Group:		System/Servers
+Provides:	telnetd = %version-%release
+Obsoletes:	telnetd < %version-%release
 
 %description	server
 Telnet is a popular protocol for logging into remote systems over
