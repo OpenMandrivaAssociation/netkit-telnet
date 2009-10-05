@@ -29,6 +29,7 @@ Patch21:	telnet-0.17-errno_test_sys_bsd.patch
 Patch100:	telnet-0.17-sock.patch
 Patch101:	telnet-0.17-cleanup_cleanup.patch
 Patch102:	telnet-0.17-CAN-2005-0488.patch
+Patch103:	netkit-telnet-0.17-format_not_a_string_literal_and_no_format_arguments.diff
 BuildRequires:	gpm-devel
 BuildRequires:	ncurses-devel
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
@@ -81,6 +82,7 @@ mv telnet telnet-NETKIT
 %patch100 -p1 -b .socket
 %patch101 -p1 -b .cleanup_cleanup
 %patch102 -p1 -b .CAN-2005-0488
+%patch103 -p0 -b .format_not_a_string_literal_and_no_format_arguments
 
 # only build the telnet client
 #perl -pi -e "s|^SUB.*|SUB = telnet|g" Makefile
