@@ -1,7 +1,7 @@
 Summary:	Client for the telnet remote login protocol
 Name:		netkit-telnet
 Version:	0.17
-Release:	%mkrel 7
+Release:	%mkrel 8
 License:	BSD
 Group:		Networking/Remote access
 URL:		ftp://ftp.uk.linux.org/pub/linux/Networking/netkit/
@@ -30,6 +30,7 @@ Patch100:	telnet-0.17-sock.patch
 Patch101:	telnet-0.17-cleanup_cleanup.patch
 Patch102:	telnet-0.17-CAN-2005-0488.patch
 Patch103:	netkit-telnet-0.17-format_not_a_string_literal_and_no_format_arguments.diff
+Provides:	telnet-client
 BuildRequires:	gpm-devel
 BuildRequires:	ncurses-devel
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
@@ -44,6 +45,7 @@ Summary:	A extremely unsecure telnet server
 Group:		System/Servers
 Provides:	telnetd = %version-%release
 Obsoletes:	telnetd < %version-%release
+Provides:	telnet-server
 
 %description	server
 Telnet is a popular protocol for logging into remote systems over
