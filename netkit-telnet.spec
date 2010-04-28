@@ -1,7 +1,7 @@
 Summary:	Client for the telnet remote login protocol
 Name:		netkit-telnet
 Version:	0.17
-Release:	%mkrel 8
+Release:	%mkrel 9
 License:	BSD
 Group:		Networking/Remote access
 URL:		ftp://ftp.uk.linux.org/pub/linux/Networking/netkit/
@@ -31,6 +31,8 @@ Patch101:	telnet-0.17-cleanup_cleanup.patch
 Patch102:	telnet-0.17-CAN-2005-0488.patch
 Patch103:	netkit-telnet-0.17-format_not_a_string_literal_and_no_format_arguments.diff
 Provides:	telnet-client
+Conflicts:  krb5-appl-clients
+Conflicts:  heimdal-telnet
 BuildRequires:	gpm-devel
 BuildRequires:	ncurses-devel
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
@@ -46,6 +48,8 @@ Group:		System/Servers
 Provides:	telnetd = %version-%release
 Obsoletes:	telnetd < %version-%release
 Provides:	telnet-server
+Conflicts:  krb5-appl-servers
+Conflicts:  heimdal-telnetd
 
 %description	server
 Telnet is a popular protocol for logging into remote systems over
@@ -109,29 +113,29 @@ perl -pi -e 's|install[ ]+-s|install|g' \
 make
 
 %install
-[ -n "%{buildroot}" -a "%{buildroot}" != / ] && rm -rf %{buildroot}
+rm -rf %{buildroot}
 
 install -d %{buildroot}%{_bindir}
 install -d %{buildroot}%{_sbindir}
 install -d %{buildroot}%{_mandir}/man1
 install -d %{buildroot}%{_mandir}/man8
 
-install -m0755 telnet/telnet  %{buildroot}%{_bindir}/netkit-telnet
-install -m0644 telnet/telnet.1 %{buildroot}%{_mandir}/man1/netkit-telnet.1
-install -m0755 telnetd/telnetd  %{buildroot}%{_sbindir}/netkit-telnetd
-install -m0644 telnetd/telnetd.8 %{buildroot}%{_mandir}/man8/netkit-telnetd.8
+install -m0755 telnet/telnet  %{buildroot}%{_bindir}/telnet
+install -m0644 telnet/telnet.1 %{buildroot}%{_mandir}/man1/telnet.1
+install -m0755 telnetd/telnetd  %{buildroot}%{_sbindir}/telnetd
+install -m0644 telnetd/telnetd.8 %{buildroot}%{_mandir}/man8/telnetd.8
 
 %clean
-[ -n "%{buildroot}" -a "%{buildroot}" != / ] && rm -rf %{buildroot}
+rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root)
 %doc ChangeLog README
-%attr(0755,root,root) %{_bindir}/netkit-telnet
-%attr(0644,root,root) %{_mandir}/man1/netkit-telnet.1*
+%{_bindir}/telnet
+%{_mandir}/man1/telnet.1*
 
 %files server
 %defattr(-,root,root)
 %doc ChangeLog README
-%attr(0755,root,root) %{_sbindir}/netkit-telnetd
-%attr(0644,root,root) %{_mandir}/man8/netkit-telnetd.8*
+%{_sbindir}/telnetd
+%{_mandir}/man8/telnetd.8*
