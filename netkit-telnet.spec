@@ -1,7 +1,7 @@
 Summary:	Client for the telnet remote login protocol
 Name:		netkit-telnet
 Version:	0.17
-Release:	%mkrel 10
+Release:	%mkrel 11
 License:	BSD
 Group:		Networking/Remote access
 URL:		ftp://ftp.uk.linux.org/pub/linux/Networking/netkit/
@@ -25,6 +25,7 @@ Patch18:	telnet-gethostbyname.patch
 Patch19:	netkit-telnet-0.17-ipv6.diff
 Patch20:	netkit-telnet-0.17-nodns.patch
 Patch21:	telnet-0.17-errno_test_sys_bsd.patch
+Patch22:	netkit-telnet-0.17-reallynodns.patch
 #
 Patch100:	telnet-0.17-sock.patch
 Patch101:	telnet-0.17-cleanup_cleanup.patch
@@ -84,6 +85,7 @@ mv telnet telnet-NETKIT
 %patch19 -p1 -b .gethost2
 %patch20 -p1 -b .nodns
 %patch21 -p1 -b .errnosysbsd
+%patch22 -p1 -b .reallynodns
 #
 %patch100 -p1 -b .socket
 %patch101 -p1 -b .cleanup_cleanup
