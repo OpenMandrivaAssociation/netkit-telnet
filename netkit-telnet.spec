@@ -1,7 +1,7 @@
 Summary:	Client for the telnet remote login protocol
 Name:		netkit-telnet
 Version:	0.17
-Release:	%mkrel 13
+Release:	14
 License:	BSD
 Group:		Networking/Remote access
 URL:		ftp://ftp.uk.linux.org/pub/linux/Networking/netkit/
@@ -34,12 +34,12 @@ Patch100:	telnet-0.17-sock.patch
 Patch101:	telnet-0.17-cleanup_cleanup.patch
 Patch102:	telnet-0.17-CAN-2005-0488.patch
 Patch103:	netkit-telnet-0.17-format_not_a_string_literal_and_no_format_arguments.diff
+Patch104:	netkit-telnet-0.17-CVE-2011-4862.diff
 Provides:	telnet-client
 Conflicts:  krb5-appl-clients
 Conflicts:  heimdal-telnet
 BuildRequires:	gpm-devel
 BuildRequires:	ncurses-devel
-BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 
 %description
 Telnet is a popular protocol for logging into remote systems over
@@ -97,6 +97,7 @@ mv telnet telnet-NETKIT
 %patch101 -p1 -b .cleanup_cleanup
 %patch102 -p1 -b .CAN-2005-0488
 %patch103 -p0 -b .format_not_a_string_literal_and_no_format_arguments
+%patch104 -p0 -b .CVE-2011-4862
 
 # only build the telnet client
 #perl -pi -e "s|^SUB.*|SUB = telnet|g" Makefile
@@ -133,17 +134,12 @@ install -m0644 telnet/telnet.1 %{buildroot}%{_mandir}/man1/telnet.1
 install -m0755 telnetd/telnetd  %{buildroot}%{_sbindir}/telnetd
 install -m0644 telnetd/telnetd.8 %{buildroot}%{_mandir}/man8/telnetd.8
 
-%clean
-rm -rf %{buildroot}
-
 %files
-%defattr(-,root,root)
 %doc ChangeLog README
 %{_bindir}/telnet
 %{_mandir}/man1/telnet.1*
 
 %files server
-%defattr(-,root,root)
 %doc ChangeLog README
 %{_sbindir}/telnetd
 %{_mandir}/man8/telnetd.8*
