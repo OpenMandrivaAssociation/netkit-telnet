@@ -1,0 +1,208 @@
+--- netkit-telnet-0.17/telnetd/ext.h.cleanup_cleanup	2005-04-05 17:46:03.000000000 +0200
++++ netkit-telnet-0.17/telnetd/ext.h	2005-04-05 17:46:37.000000000 +0200
+@@ -41,6 +41,9 @@
+ extern char do_dont_resp[256];
+ extern char will_wont_resp[256];
+ extern int linemode;	/* linemode on/off */
++extern int do_cleanup;
++#define CHECK_CLEANUP if (do_cleanup) { cleanup(0); }
++void catch_child(int);
+ 
+ #ifdef LINEMODE
+ extern int uselinemode;	/* what linemode to use (on/off) */
+--- netkit-telnet-0.17/telnetd/telnetd.c.cleanup_cleanup	2005-04-05 17:46:03.000000000 +0200
++++ netkit-telnet-0.17/telnetd/telnetd.c	2005-04-05 17:46:03.000000000 +0200
+@@ -682,7 +682,7 @@
+ 	 * Start up the login process on the slave side of the terminal
+ 	 */
+ 	startslave(host, level, user_name);
+-
++	CHECK_CLEANUP;
+ 	telnet(net, pty);  /* begin server processing */
+ 
+ 	/*NOTREACHED*/
+@@ -703,6 +703,7 @@
+      * Initialize the slc mapping table.
+      */
+     get_slc_defaults();
++	CHECK_CLEANUP;
+ 
+     /*
+      * Do some tests where it is desireable to wait for a response.
+@@ -711,6 +712,7 @@
+      */
+     if (my_state_is_wont(TELOPT_SGA))
+ 	send_will(TELOPT_SGA, 1);
++	CHECK_CLEANUP;
+     /*
+      * Is the client side a 4.2 (NOT 4.3) system?  We need to know this
+      * because 4.2 clients are unable to deal with TCP urgent data.
+@@ -722,6 +724,7 @@
+      * echo the terminal input).
+      */
+     send_do(TELOPT_ECHO, 1);
++	CHECK_CLEANUP;
+     
+ #ifdef	LINEMODE
+     if (his_state_is_wont(TELOPT_LINEMODE)) {
+@@ -733,15 +736,19 @@
+ 	editmode = 0;
+ 	send_do(TELOPT_LINEMODE, 1);  /* send do linemode */
+     }
++	CHECK_CLEANUP;
+ #endif	/* LINEMODE */
+ 
+     /*
+      * Send along a couple of other options that we wish to negotiate.
+      */
+     send_do(TELOPT_NAWS, 1);
++	CHECK_CLEANUP;
+     send_will(TELOPT_STATUS, 1);
++	CHECK_CLEANUP;
+     flowmode = 1;  /* default flow control state */
+     send_do(TELOPT_LFLOW, 1);
++	CHECK_CLEANUP;
+     
+     /*
+      * Spin, waiting for a response from the DO ECHO.  However,
+@@ -754,6 +761,7 @@
+      */
+     while (his_will_wont_is_changing(TELOPT_NAWS)) {
+ 	ttloop();
++	CHECK_CLEANUP;
+     }
+     
+     /*
+@@ -769,8 +777,10 @@
+      */
+     if (his_want_state_is_will(TELOPT_ECHO) &&
+ 	his_state_is_will(TELOPT_NAWS)) {
+-	while (his_will_wont_is_changing(TELOPT_ECHO))
++	while (his_will_wont_is_changing(TELOPT_ECHO)) {
+ 	    ttloop();
++	    CHECK_CLEANUP;
++	}
+     }
+     /*
+      * On the off chance that the telnet client is broken and does not
+@@ -785,6 +795,7 @@
+     if (his_want_state_is_will(TELOPT_ECHO)) {
+ 	DIAG(TD_OPTIONS, netoprintf("td: simulating recv\r\n"););
+ 	willoption(TELOPT_ECHO);
++	CHECK_CLEANUP;
+     }
+     
+     /*
+@@ -792,13 +803,17 @@
+      * will break stupid 4.2 telnets out of local terminal echo.
+      */
+     
+-    if (my_state_is_wont(TELOPT_ECHO))
++    if (my_state_is_wont(TELOPT_ECHO)) { 
+ 	send_will(TELOPT_ECHO, 1);
++	CHECK_CLEANUP;
++    }
+     
+     /*
+      * Turn on packet mode
+      */
+     ioctl(p, TIOCPKT, (char *)&on);
++	CHECK_CLEANUP;
++
+ #if defined(LINEMODE) && defined(KLUDGELINEMODE)
+     /*
+      * Continuing line mode support.  If client does not support
+@@ -807,6 +822,7 @@
+      */
+     if (lmodetype < REAL_LINEMODE)
+ 	send_do(TELOPT_TM, 1);
++	CHECK_CLEANUP;
+ #endif	/* defined(LINEMODE) && defined(KLUDGELINEMODE) */
+     
+     /*
+@@ -815,12 +831,14 @@
+      * linemode negotiation.
+      */
+     telrcv();
++	CHECK_CLEANUP;
+     
+     ioctl(f, FIONBIO, (char *)&on);
+     ioctl(p, FIONBIO, (char *)&on);
+ 
+ #if defined(SO_OOBINLINE)
+     setsockopt(net, SOL_SOCKET, SO_OOBINLINE, &on, sizeof on);
++	CHECK_CLEANUP;
+ #endif	/* defined(SO_OOBINLINE) */
+     
+ #ifdef	SIGTSTP
+@@ -834,7 +852,7 @@
+     signal(SIGTTOU, SIG_IGN);
+ #endif
+     
+-    signal(SIGCHLD, cleanup);
++    signal(SIGCHLD, catch_child);
+     
+ #ifdef TIOCNOTTY
+     {
+@@ -861,6 +879,7 @@
+     IM = DEFAULT_IM;
+     HE = 0;
+ 
++	CHECK_CLEANUP;
+     edithost(HE, host_name);
+     if (hostinfo && *IM)
+ 	putf(IM, ptyibuf2);
+@@ -877,6 +896,7 @@
+ #endif	/* LINEMODE */
+ 
+     DIAG(TD_REPORT, netoprintf("td: Entering processing loop\r\n"););
++	CHECK_CLEANUP;
+     
+     for (;;) {
+ 	fd_set ibits, obits, xbits;
+@@ -884,6 +904,7 @@
+ 	
+ 	if (ncc < 0 && pcc < 0)
+ 	    break;
++	CHECK_CLEANUP;
+ 	
+ 	FD_ZERO(&ibits);
+ 	FD_ZERO(&obits);
+@@ -913,6 +934,7 @@
+ 	    FD_SET(f, &xbits);
+ 	    if (f >= hifd) hifd = f+1;
+ 	}
++	CHECK_CLEANUP;
+ 	if ((c = select(hifd, &ibits, &obits, &xbits,
+ 			(struct timeval *)0)) < 1) {
+ 	    if (c == -1) {
+@@ -1078,10 +1100,13 @@
+ 
+ 	if (FD_ISSET(f, &obits) && (nfrontp - nbackp) > 0)
+ 	    netflush();
++	CHECK_CLEANUP;
+ 	if (ncc > 0)
+ 	    telrcv();
++	CHECK_CLEANUP;
+ 	if (FD_ISSET(p, &obits) && (pfrontp - pbackp) > 0)
+ 	    ptyflush();
++	CHECK_CLEANUP;
+     }
+     /* to avoid a race for wtmp lock */
+     signal(SIGCHLD, SIG_IGN);
+--- netkit-telnet-0.17/telnetd/sys_term.c.cleanup_cleanup	1999-12-17 15:28:47.000000000 +0100
++++ netkit-telnet-0.17/telnetd/sys_term.c	2005-04-05 17:46:03.000000000 +0200
+@@ -713,6 +713,13 @@
+    avs->argv[avs->argc] = NULL;
+ }
+ 
++int do_cleanup = 0;
++
++void catch_child(int sig) {
++	(void)sig;
++	do_cleanup = 1;
++}
++
+ /*
+  * cleanup()
+  *

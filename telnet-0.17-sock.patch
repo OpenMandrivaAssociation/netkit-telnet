@@ -1,0 +1,211 @@
+--- netkit-telnet-0.17/telnet/commands.c.socket~	2004-07-23 07:17:18.000000000 +0200
++++ netkit-telnet-0.17/telnet/commands.c	2004-07-23 12:12:32.000000000 +0200
+@@ -36,6 +36,7 @@
+ 
+ #include "telnet_locl.h"
+ #include <err.h>
++#include <sys/un.h>
+ 
+ #if	defined(IPPROTO_IP) && defined(IP_TOS)
+ int tos = -1;
+@@ -2173,8 +2174,8 @@
+     Command *c;
+     FILE *rcfile;
+     int gotmachine = 0;
+-    int l1 = strlen(m1);
+-    int l2 = strlen(m2);
++    int l1 = m1 ? strlen(m1) : 0;
++    int l2 = m2 ? strlen(m2) : 0;
+     char m1save[MAXHOSTNAMELEN];
+ 
+     if (skiprc)
+@@ -2328,6 +2329,8 @@
+     if (hostp == 0)
+ 	goto usage;
+ 
++    net = -1;
++    
+ #if	defined(IP_OPTIONS) && defined(IPPROTO_IP)
+     if (hostp[0] == '@' || hostp[0] == '!') {
+ 	if ((hostname = strrchr(hostp, ':')) == NULL)
+@@ -2346,6 +2349,13 @@
+ 	}
+     } else
+ #endif
++    if (hostp[0] == '/' || hostp[0] == '.') {
++	struct sockaddr_un addr;
++	addr.sun_family = AF_UNIX;
++	strcpy(addr.sun_path, hostp);
++	net = socket(PF_UNIX, SOCK_STREAM, 0);
++	connect(net, &addr, sizeof(struct sockaddr_un));
++    } else
+     {
+ 	hostname = hostp;
+ 	memset(&hints, 0, sizeof(hints));
+@@ -2372,91 +2382,92 @@
+ 	}
+     }
+ 
+-    net = -1;
+-    retry = 0;
+-    for (res = res0; res; res = res->ai_next) {
+-	if (1 /* retry */) {
+-	    char hbuf[NI_MAXHOST];
+-	    
+-	    if (getnameinfo(res->ai_addr, res->ai_addrlen, hbuf, sizeof(hbuf),
+-	            NULL, 0, niflags) != 0) {
+-		strcpy(hbuf, "(invalid)");
+-	    }
+-	    printf("Trying %s...\r\n", hbuf);
+-	}
+-	net = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+-	if (net < 0)
+-	    continue;
+-	    
+-	if (aliasp) {
+-	    struct addrinfo ahints, *ares;
+-	    memset(&ahints, 0, sizeof(ahints));
+-	    ahints.ai_family = PF_UNSPEC;
+-	    ahints.ai_socktype = SOCK_STREAM;
+-	    ahints.ai_flags = AI_PASSIVE;
+-	    error = getaddrinfo(aliasp, "0", &ahints, &ares);
+-	    if (error) {
+-	        warn("%s: %s", aliasp, gai_strerror(error));
+-	        close(net);
+-	        continue;
+-	    }
+-	    if (bind(net, ares->ai_addr, ares->ai_addrlen) < 0) {
+-	        perror(aliasp);
+-                (void) close(net);   /* dump descriptor */
+-		freeaddrinfo(ares);
+-		continue;
+-            }
+-	    freeaddrinfo(ares);
+-        }
+- #if	defined(IP_OPTIONS) && defined(IPPROTO_IP)
+-	if (srp && res->ai_family == AF_INET
+-	 && setsockopt(net, IPPROTO_IP, IP_OPTIONS, (char *)srp, srlen) < 0)
+-		perror("setsockopt (IP_OPTIONS)");
++    if (net == -1) {
++	    retry = 0;
++	    for (res = res0; res; res = res->ai_next) {
++		if (1 /* retry */) {
++		    char hbuf[NI_MAXHOST];
++		    
++		    if (getnameinfo(res->ai_addr, res->ai_addrlen, hbuf, sizeof(hbuf),
++			    NULL, 0, niflags) != 0) {
++			strcpy(hbuf, "(invalid)");
++		    }
++		    printf("Trying %s...\r\n", hbuf);
++		}
++		net = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
++		if (net < 0)
++		    continue;
++		    
++		if (aliasp) {
++		    struct addrinfo ahints, *ares;
++		    memset(&ahints, 0, sizeof(ahints));
++		    ahints.ai_family = PF_UNSPEC;
++		    ahints.ai_socktype = SOCK_STREAM;
++		    ahints.ai_flags = AI_PASSIVE;
++		    error = getaddrinfo(aliasp, "0", &ahints, &ares);
++		    if (error) {
++			warn("%s: %s", aliasp, gai_strerror(error));
++			close(net);
++			continue;
++		    }
++		    if (bind(net, ares->ai_addr, ares->ai_addrlen) < 0) {
++			perror(aliasp);
++			(void) close(net);   /* dump descriptor */
++			freeaddrinfo(ares);
++			continue;
++		    }
++		    freeaddrinfo(ares);
++		}
++	 #if	defined(IP_OPTIONS) && defined(IPPROTO_IP)
++		if (srp && res->ai_family == AF_INET
++		 && setsockopt(net, IPPROTO_IP, IP_OPTIONS, (char *)srp, srlen) < 0)
++			perror("setsockopt (IP_OPTIONS)");
+ #endif
+ #if	defined(IPPROTO_IP) && defined(IP_TOS)
+-	if (res->ai_family == AF_INET) {
++		if (res->ai_family == AF_INET) {
+ # if	defined(HAS_GETTOS)
+-	    struct tosent *tp;
+-	    if (tos < 0 && (tp = gettosbyname("telnet", "tcp")))
+-		tos = tp->t_tos;
++		    struct tosent *tp;
++		    if (tos < 0 && (tp = gettosbyname("telnet", "tcp")))
++			tos = tp->t_tos;
+ # endif
+-	    if (tos < 0)
+-		tos = IPTOS_LOWDELAY;	/* Low Delay bit */
+-	    if (tos
+-		&& (setsockopt(net, IPPROTO_IP, IP_TOS,
+-		    (void *)&tos, sizeof(int)) < 0)
+-		&& (errno != ENOPROTOOPT))
+-		    perror("telnet: setsockopt (IP_TOS) (ignored)");
+-	}
++		    if (tos < 0)
++			tos = IPTOS_LOWDELAY;	/* Low Delay bit */
++		    if (tos
++			&& (setsockopt(net, IPPROTO_IP, IP_TOS,
++			    (void *)&tos, sizeof(int)) < 0)
++			&& (errno != ENOPROTOOPT))
++			    perror("telnet: setsockopt (IP_TOS) (ignored)");
++		}
+ #endif	/* defined(IPPROTO_IP) && defined(IP_TOS) */
+ 
+-	if (debug && SetSockOpt(net, SOL_SOCKET, SO_DEBUG, 1) < 0) {
+-		perror("setsockopt (SO_DEBUG)");
+-	}
++		if (debug && SetSockOpt(net, SOL_SOCKET, SO_DEBUG, 1) < 0) {
++			perror("setsockopt (SO_DEBUG)");
++		}
+ 
+-	if (connect(net, res->ai_addr, res->ai_addrlen) < 0) {
+-	    char hbuf[NI_MAXHOST];
+-	    
+-	    if (getnameinfo(res->ai_addr, res->ai_addrlen, hbuf, sizeof(hbuf),
+-		    NULL, 0, niflags) != 0) {
+-	        strcpy(hbuf, "(invalid)");
+-	    }
+-	    fprintf(stderr, "telnet: connect to address %s: %s\n", hbuf,
+-	        strerror(errno));
+-	
+-	    close(net);
+-	    net = -1;
+-	    retry++;
+-	    continue;
+-	}
++		if (connect(net, res->ai_addr, res->ai_addrlen) < 0) {
++		    char hbuf[NI_MAXHOST];
++		    
++		    if (getnameinfo(res->ai_addr, res->ai_addrlen, hbuf, sizeof(hbuf),
++			    NULL, 0, niflags) != 0) {
++			strcpy(hbuf, "(invalid)");
++		    }
++		    fprintf(stderr, "telnet: connect to address %s: %s\n", hbuf,
++			strerror(errno));
++		
++		    close(net);
++		    net = -1;
++		    retry++;
++		    continue;
++		}
+ 
+-	connected++;
++		connected++;
+ #if	defined(AUTHENTICATION) || defined(ENCRYPTION)
+-	auth_encrypt_connect(connected);
++		auth_encrypt_connect(connected);
+ #endif	/* defined(AUTHENTICATION) */
+-	break;
++		break;
++	    }
++	    freeaddrinfo(res0);
+     }
+-    freeaddrinfo(res0);
+     if (net < 0) {
+         return 0;
+     }

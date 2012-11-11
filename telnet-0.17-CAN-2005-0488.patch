@@ -1,0 +1,99 @@
+--- netkit-telnet-0.17/telnet/commands.c.CAN-2005-0488	2005-06-07 16:50:44.000000000 +0200
++++ netkit-telnet-0.17/telnet/commands.c	2005-06-07 16:57:25.662881152 +0200
+@@ -1618,7 +1618,10 @@
+ 	struct env_lst *prev;	/* pointer to previous structure */
+ 	unsigned char *var;	/* pointer to variable name */
+ 	unsigned char *value;	/* pointer to variable value */
+-	int export;		/* 1 -> export with default list of variables */
++	int export;		/* whether and how to export this variable: */
++/* 0: don't permit export */
++/* 1: export with default list of variables */
++/* 2: export if explicitly requested by the server only */
+ 	int welldefined;	/* A well defined variable */
+ };
+ 
+@@ -1691,6 +1694,8 @@
+ 		env_define((unsigned char *)"USER", ep->value);
+ 		env_unexport((unsigned char *)"USER");
+ 	}
++	if ((ep = env_find("TERM")))
++		ep->export = 2;
+ 	env_export((unsigned char *)"DISPLAY");
+ 	env_export((unsigned char *)"PRINTER");
+ 	env_export((unsigned char *)"XAUTHORITY");
+@@ -1791,7 +1796,7 @@
+ 	struct env_lst *ep;
+ 
+ 	for (ep = envlisthead.next; ep; ep = ep->next) {
+-		printf("%c %-20s %s\r\n", ep->export ? '*' : ' ',
++		printf("%c %-20s %s\r\n", " *+"[ep->export],
+ 					ep->var, ep->value);
+ 	}
+ }
+@@ -1800,14 +1805,14 @@
+ env_default(int init, int welldefined)
+ {
+ 	static struct env_lst *nep = NULL;
+-
++	
+ 	if (init) {
+ 		nep = &envlisthead;
+ 		return NULL;
+ 	}
+ 	if (nep) {
+ 		while ((nep = nep->next)) {
+-			if (nep->export && (nep->welldefined == welldefined))
++			if (nep->export == 1 && nep->welldefined == welldefined)
+ 				return(nep->var);
+ 		}
+ 	}
+--- netkit-telnet-0.17/telnet/telnet.1.CAN-2005-0488	2005-06-07 16:51:46.438451104 +0200
++++ netkit-telnet-0.17/telnet/telnet.1	2005-06-07 16:51:59.971393784 +0200
+@@ -438,11 +438,12 @@
+ variables that may be sent through the
+ .Dv TELNET ENVIRON
+ option.
+-The initial set of variables is taken from the users
++The initial set of variables is taken from the user's
+ environment, with only the
+-.Ev DISPLAY
++.Ev DISPLAY ,
++.Ev PRINTER ,
+ and
+-.Ev PRINTER
++.Ev XAUTHORITY
+ variables being exported by default.
+ The
+ .Ev USER
+@@ -451,7 +452,10 @@
+ or
+ .Fl l
+ options are used.
+-.br
++Additionally, the value of the
++.Ev TERM
++variable is by default available to be queried by the server.
++.Pp
+ Valid arguments for the
+ .Ic environ
+ command are:
+@@ -477,14 +481,16 @@
+ .It Ic unexport Ar variable
+ Mark the variable
+ .Ar variable
+-to not be exported unless
+-explicitly asked for by the remote side.
++to not be exported.
+ .It Ic list
+ List the current set of environment variables.
+ Those marked with a
+ .Cm *
+ will be sent automatically,
+-other variables will only be sent if explicitly requested.
++those marked with a
++.Cm +
++will only be sent if explicitly requested by the server,
++and others won't be revealed to the server even if requested.
+ .It Ic \&?
+ Prints out help information for the
+ .Ic environ
