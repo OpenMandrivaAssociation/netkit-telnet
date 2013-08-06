@@ -1,10 +1,10 @@
 Summary:	Client for the telnet remote login protocol
 Name:		netkit-telnet
 Version:	0.17
-Release:	%mkrel 15
+Release:	15
 License:	BSD
 Group:		Networking/Remote access
-URL:		ftp://ftp.uk.linux.org/pub/linux/Networking/netkit/
+Url:		ftp://ftp.uk.linux.org/pub/linux/Networking/netkit/
 Source0:	ftp://ftp.uk.linux.org/pub/linux/Networking/netkit/netkit-telnet-%{version}.tar.gz
 Source2:	telnet-client.tar.gz
 Patch1:		telnet-client-cvs.patch
@@ -32,12 +32,11 @@ Patch101:	telnet-0.17-cleanup_cleanup.patch
 Patch102:	telnet-0.17-CAN-2005-0488.patch
 Patch103:	netkit-telnet-0.17-format_not_a_string_literal_and_no_format_arguments.diff
 Patch104:	netkit-telnet-0.17-CVE-2011-4862.diff
-Provides:	telnet-client
-Conflicts:  krb5-appl-clients
-Conflicts:  heimdal-telnet
 BuildRequires:	gpm-devel
-BuildRequires:	ncurses-devel
-BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
+BuildRequires:	pkgconfig(ncurses)
+Provides:	telnet-client
+Conflicts:	krb5-appl-clients
+Conflicts: 	heimdal-telnet
 
 %description
 Telnet is a popular protocol for logging into remote systems over
@@ -47,11 +46,11 @@ client.
 %package	server
 Summary:	A extremely unsecure telnet server
 Group:		System/Servers
-Provides:	telnetd = %version-%release
-Obsoletes:	telnetd < %version-%release
+Provides:	telnetd = %{version}-%{release}
+Obsoletes:	telnetd < %{version}-%{release}
 Provides:	telnet-server
-Conflicts:  krb5-appl-servers
-Conflicts:  heimdal-telnetd
+Conflicts:	krb5-appl-servers
+Conflicts:	heimdal-telnetd
 
 %description	server
 Telnet is a popular protocol for logging into remote systems over
@@ -64,11 +63,9 @@ you want a secure server.
 
 %prep 
 
-%setup -q -n netkit-telnet-%{version}
-
+%setup -q
 mv telnet telnet-NETKIT
 %setup -T -D -q -a 2 -n netkit-telnet-%{version}
-
 %patch1 -p0 -b .cvs
 %patch5 -p0 -b .fix
 %patch6 -p1 -b .env
@@ -117,8 +114,6 @@ perl -pi -e 's|install[ ]+-s|install|g' \
 make
 
 %install
-rm -rf %{buildroot}
-
 install -d %{buildroot}%{_bindir}
 install -d %{buildroot}%{_sbindir}
 install -d %{buildroot}%{_mandir}/man1
@@ -129,93 +124,12 @@ install -m0644 telnet/telnet.1 %{buildroot}%{_mandir}/man1/telnet.1
 install -m0755 telnetd/telnetd  %{buildroot}%{_sbindir}/telnetd
 install -m0644 telnetd/telnetd.8 %{buildroot}%{_mandir}/man8/telnetd.8
 
-%clean
-rm -rf %{buildroot}
-
 %files
-%defattr(-,root,root)
 %doc ChangeLog README
 %{_bindir}/telnet
 %{_mandir}/man1/telnet.1*
 
 %files server
-%defattr(-,root,root)
-%doc ChangeLog README
 %{_sbindir}/telnetd
 %{_mandir}/man8/telnetd.8*
-
-
-%changelog
-* Wed Dec 28 2011 Oden Eriksson <oeriksson@mandriva.com> 0.17-12.1
-- P104: security fix for CVE-2011-4862 (krb5-appl)
-
-* Wed May 04 2011 Oden Eriksson <oeriksson@mandriva.com> 0.17-12mdv2011.0
-+ Revision: 666613
-- mass rebuild
-
-* Sun Jan 23 2011 Oden Eriksson <oeriksson@mandriva.com> 0.17-11
-+ Revision: 632389
-- sync with telnet-0.17-48.fc15.src.rpm
-
-* Fri Dec 03 2010 Oden Eriksson <oeriksson@mandriva.com> 0.17-10mdv2011.0
-+ Revision: 606821
-- rebuild
-
-* Wed Apr 28 2010 Guillaume Rousse <guillomovitch@mandriva.org> 0.17-9mdv2010.1
-+ Revision: 540215
-- install as telnet(d), instead of netkit-telnet(d)
-- conflict with other telnet packages
-- add telnet-server and telnet-client virtual packages
-
-* Mon Oct 05 2009 Oden Eriksson <oeriksson@mandriva.com> 0.17-7mdv2010.0
-+ Revision: 454015
-- P103: fix format string errors
-- rebuild
-
-  + Thierry Vignaud <tv@mandriva.org>
-    - rebuild
-
-  + Pascal Terjan <pterjan@mandriva.org>
-    - Obsoletes/Provides telnetd which it used to be called
-
-* Tue Jul 29 2008 Thierry Vignaud <tv@mandriva.org> 0.17-4mdv2009.0
-+ Revision: 253790
-- rebuild
-
-* Thu Jan 03 2008 Olivier Blin <oblin@mandriva.com> 0.17-2mdv2008.1
-+ Revision: 140994
-- restore BuildRoot
-
-  + Thierry Vignaud <tv@mandriva.org>
-    - kill re-definition of %%buildroot on Pixel's request
-
-* Sat Sep 15 2007 Oden Eriksson <oeriksson@mandriva.com> 0.17-2mdv2008.0
-+ Revision: 86376
-- sync with telnet-0.17-39.fc8.src.rpm
-
-* Sat Jul 07 2007 Oden Eriksson <oeriksson@mandriva.com> 0.17-1mdv2008.0
-+ Revision: 49461
-- make it build
-
-
-* Thu Jun 15 2006 Oden Eriksson <oeriksson@mandriva.com> 0.17-1mdv2007.0
-- someone keeps deleting the plain telnet package in contrib,
-  so then i guess it will stay if renamed?
-
-* Wed Apr 26 2006 Oden Eriksson <oeriksson@mandriva.com> 0.17-13mdk
-- re-added to contrib
-
-* Thu Jun 16 2005 Oden Eriksson <oeriksson@mandriva.com> 0.17-12mdk
-- synced with RH (P10-P14), fixes for CAN-2005-0488, CAN-2005-468 and 
-  CAN-2005-469 (1:0.17-20.EL4.3)
-
-* Tue Jan 18 2005 Oden Eriksson <oeriksson@mandrakesoft.com> 0.17-11mdk
-- added the telnetd package, could come handy someday...
-
-* Mon Nov 15 2004 Oden Eriksson <oeriksson@mandrakesoft.com> 0.17-10mdk
-- sync with fedora (telnet-0.17-30.src.rpm, P7, P8)
-- added P9 from arklinux:
-  - Add feature to telnet to a PF_UNIX socket
-    (if your app is listening on /tmp/blah.sck, use telnet /tmp/blah.sck)
-- fix url
 
