@@ -95,9 +95,9 @@ mv telnet telnet-NETKIT
 #perl -pi -e "s|^SUB.*|SUB = telnet|g" Makefile
 
 %build
-sh configure --with-c-compiler=gcc
+sh configure --with-c-compiler=%{__cc}
 perl -pi -e '
-    s,^CC=.*$,CC=cc,;
+    s,^CC=.*$,CC=%{__cc},;
     s,-O2,\$(RPM_OPT_FLAGS),;
     s,^BINDIR=.*$,BINDIR=%{_bindir},;
     s,^MANDIR=.*$,MANDIR=%{_mandir},;
