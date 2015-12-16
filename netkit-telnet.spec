@@ -1,3 +1,5 @@
+%define _disable_lto 1
+
 Summary:	Client for the telnet remote login protocol
 Name:		netkit-telnet
 Version:	0.17
