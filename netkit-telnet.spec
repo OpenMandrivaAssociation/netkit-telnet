@@ -3,7 +3,7 @@
 Summary:	Client for the telnet remote login protocol
 Name:		netkit-telnet
 Version:	0.17
-Release:	25
+Release:	26
 License:	BSD
 Group:		Networking/Remote access
 Url:		ftp://ftp.uk.linux.org/pub/linux/Networking/netkit/
