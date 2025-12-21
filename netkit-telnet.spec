@@ -34,6 +34,7 @@ Patch101:	telnet-0.17-cleanup_cleanup.patch
 Patch102:	telnet-0.17-CAN-2005-0488.patch
 Patch103:	netkit-telnet-0.17-format_not_a_string_literal_and_no_format_arguments.diff
 Patch104:	netkit-telnet-0.17-CVE-2011-4862.diff
+BuildRequires:	make
 BuildRequires:	gpm-devel
 BuildRequires:	pkgconfig(ncurses)
 Provides:	telnet-client
